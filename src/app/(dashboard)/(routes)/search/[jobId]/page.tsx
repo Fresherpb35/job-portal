@@ -2,7 +2,7 @@ import { db } from "@/lib/db"
 import { auth } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
 import { JobDetailsPageContent } from "./_components/job-details-page-content"
-import { profile } from "console"
+
 import { UserProfile } from "@/generated/prisma"
 import { Separator } from "@radix-ui/react-dropdown-menu"
 import { getJobs } from "../../../../../../actions/get-jobs"
@@ -10,11 +10,7 @@ import Box from "@/app/(dashboard)/components/box"
 import { PageContent } from "../_components/page-content"
 
 
-interface JobDetailsPageProps {
-  params: {
-    jobId: string
-  }
-}
+
 
 
 const JobDetailsPage = async ({params} : {params : {jobId:string}}) =>{
