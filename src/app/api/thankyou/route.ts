@@ -1,26 +1,25 @@
-// src/app/api/thankyou/route.ts
+import { compileThankYouEmailTemplate, sendMail } from "@/lib/mail";
 import { NextResponse } from "next/server";
-import { sendMail, compileThankYouEmailTemplate } from "@/lib/server/mail";
 
-export async function POST(req: Request) {
-  try {
-    const { email, fullName } = await req.json();
+export const POST = async (req:Request) =>{
 
-    const html = compileThankYouEmailTemplate(fullName);
+    const {email,fullName} = await req.json();
 
     const response = await sendMail({
-      to: email,
-      subject: "Thank you for applying",
-      body: html,
-    });
+        to:email,
+        name:fullName,
+        subject:"Thank you for applying",
+        body: compileThankYouEmailTemplate(fullName),
+    })
 
-    if (response?.messageId) {
-      return NextResponse.json({ message: "Mail delivered" }, { status: 200 });
+    if(response?.messageId){
+
+        return NextResponse.json("Mail delivered",{
+            status:200
+        })
+
     }
-
-    return NextResponse.json({ message: "Mail not sent" }, { status: 400 });
-  } catch (error) {
-    console.error("[MAIL ERROR]", error);
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
-  }
+    else{
+        return new NextResponse("Mail not send",{status:401})
+    }
 }
