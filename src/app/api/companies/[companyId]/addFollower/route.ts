@@ -1,57 +1,60 @@
-
-
 import { auth } from "@clerk/nextjs/server";
-import { db } from "@/lib/db"; // your Prisma or DB import
-import { NextResponse } from 'next/server';
+import { db } from "@/lib/db";
+import { NextResponse } from "next/server";
 
 export async function PATCH(
   req: Request,
   { params }: { params: { companyId: string } }
 ) {
   try {
-const { companyId } = await params; 
+    // Access params directly (no await needed)
+    const { companyId } = params;
+
+    // Validate MongoDB ObjectId
+    const validObjectIdRegex = /^[0-9a-fA-F]{24}$/;
+    if (!validObjectIdRegex.test(companyId)) {
+      return new NextResponse("Invalid company ID", { status: 400 });
+    }
+
+    // Await auth to get userId
     const { userId } = await auth();
-
     if (!userId) {
-      return new Response("Unauthorized", { status: 401 });
+      return new NextResponse("Unauthorized", { status: 401 });
     }
 
-
-    if(!companyId){
-        return new NextResponse("ID is missing",{status:401})
-    }
-
-
-
-
+    // Fetch the company
     const company = await db.company.findUnique({
       where: {
         id: companyId,
-      
       },
-   
     });
 
-    if(!company){
-        return new NextResponse("Company not Found",{status:401});
+    if (!company) {
+      return new NextResponse("Company not found", { status: 404 });
     }
-//  update the data
-const updateData = {
-    followers :company?.followers?{push:userId}:[userId]
-}
 
-        const updatedCompany = await db.company.update({
-            where:{
-                id:companyId,
-                userId
-            },
-            data:updateData
-        })
+    // Ensure userId is not already in followers
+    const followers = company.followers || [];
+    if (followers.includes(userId)) {
+      return new NextResponse("User already follows this company", { status: 400 });
+    }
 
+    // Update the data
+    const updateData = {
+      followers: [...followers, userId], // Append userId to followers
+    };
+
+    // Update the company (removed userId from where clause)
+    const updatedCompany = await db.company.update({
+      where: {
+        id: companyId,
+      },
+      data: updateData,
+    });
 
     return NextResponse.json(updatedCompany);
   } catch (error) {
-    console.error("[company_PATCH]", error);
+    console.error("[ADD_FOLLOWER_PATCH]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
