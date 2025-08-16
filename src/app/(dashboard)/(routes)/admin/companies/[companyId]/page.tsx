@@ -12,7 +12,7 @@ import { CompanyOverview } from "./company-overview";
 import { WhyJoinUs } from "./why-join-us";
 
 const CompanyEditPage = async ({ params }: { params: { companyId: string } }) => {
-  const { companyId } = await params;
+  const { companyId } =  params;
 
   // ✅ Validate MongoDB ObjectId
   const validObjectIdRegex = /^[0-9a-fA-F]{24}$/;
