@@ -6,25 +6,39 @@ import { CustomBreadCrumb } from "@/components/ui/custom-bread-crumb";
 import Image from "next/image";
 import CompanyDetailContentPage from "../_components/company-detail-content";
 
+// Define the props interface with params as a Promise
+interface CompanyDetailPageProps {
+  params: Promise<{ companyId: string }>;
+}
 
-const CompanyDetailPage = async ({
-  params,
-}: {
-  params: { companyId: string };
-}) => {
-  const authResult = await auth();
-  const userId = authResult?.userId ?? null;
+const CompanyDetailPage = async ({ params }: CompanyDetailPageProps) => {
+  // Await params to get the companyId
+  const { companyId } = await params;
 
-  const company = await db.company.findUnique({
-    where: { id: params.companyId },
-  });
-
-  if (!company || !userId) {
-    redirect("/");
+  // Validate MongoDB ObjectId
+  const validObjectIdRegex = /^[0-9a-fA-F]{24}$/;
+  if (!validObjectIdRegex.test(companyId)) {
+    return redirect("/");
   }
 
+  // Await auth to get userId
+  const { userId } = await auth();
+  if (!userId) {
+    return redirect("/");
+  }
+
+  // Fetch the company by ID
+  const company = await db.company.findUnique({
+    where: { id: companyId },
+  });
+
+  if (!company) {
+    return redirect("/");
+  }
+
+  // Fetch jobs for the company
   const jobs = await db.job.findMany({
-    where: { companyId: params.companyId },
+    where: { companyId },
     include: { company: true },
     orderBy: { createdAt: "desc" },
   });
