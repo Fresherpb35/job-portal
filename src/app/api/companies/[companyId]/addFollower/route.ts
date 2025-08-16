@@ -2,13 +2,16 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 
+interface Params {
+  companyId: string;
+}
+
 export async function PATCH(
   req: Request,
-  { params }: { params: { companyId: string } }
+  context: { params: Params } // use context, not destructured in type
 ) {
   try {
-    // Access params directly (no await needed)
-    const { companyId } = params;
+    const { companyId } = context.params;
 
     // Validate MongoDB ObjectId
     const validObjectIdRegex = /^[0-9a-fA-F]{24}$/;
@@ -16,40 +19,26 @@ export async function PATCH(
       return new NextResponse("Invalid company ID", { status: 400 });
     }
 
-    // Await auth to get userId
+    // Get userId
     const { userId } = await auth();
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
     // Fetch the company
-    const company = await db.company.findUnique({
-      where: {
-        id: companyId,
-      },
-    });
-
+    const company = await db.company.findUnique({ where: { id: companyId } });
     if (!company) {
       return new NextResponse("Company not found", { status: 404 });
     }
 
-    // Ensure userId is not already in followers
     const followers = company.followers || [];
     if (followers.includes(userId)) {
       return new NextResponse("User already follows this company", { status: 400 });
     }
 
-    // Update the data
-    const updateData = {
-      followers: [...followers, userId], // Append userId to followers
-    };
-
-    // Update the company (removed userId from where clause)
     const updatedCompany = await db.company.update({
-      where: {
-        id: companyId,
-      },
-      data: updateData,
+      where: { id: companyId },
+      data: { followers: [...followers, userId] },
     });
 
     return NextResponse.json(updatedCompany);
