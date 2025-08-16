@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { SearchContainer } from "../../components/ui/search-container"; // Fixed typo: conatiner -> container
+import { SearchContainer } from "../../components/ui/search-conatiner"; // Fixed typo: conatiner -> container
 import { auth } from "@clerk/nextjs/server";
 import { getJobs } from "../../../../../actions/get-jobs";
 import { CategoriesList } from "./_components/categories-list";
