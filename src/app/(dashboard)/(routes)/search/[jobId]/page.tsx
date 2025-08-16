@@ -5,8 +5,8 @@ import { JobDetailsPageContent } from "./_components/job-details-page-content";
 import Box from "@/app/(dashboard)/components/box";
 import { CustomBreadCrumb } from "@/components/ui/custom-bread-crumb";
 import { PageContent } from "../_components/page-content";
-import { Separator } from "@radix-ui/react-separator"; // Use correct separator
-import { getJobs } from "../../../../../../actions/get-jobs";
+import { Separator } from "@radix-ui/react-dropdown-menu"
+  import { getJobs } from "../../../../../../actions/get-jobs";
 
 // Define the props interface with params as a Promise
 interface JobDetailsPageProps {
