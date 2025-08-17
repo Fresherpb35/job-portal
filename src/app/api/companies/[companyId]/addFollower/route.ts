@@ -4,12 +4,12 @@ import { NextResponse } from "next/server";
 
 export async function PATCH(
   req: Request,
-  context: { params: { companyId: string } } // ✅ keep full context
+  context: { params: { companyId: string } }
 ) {
   try {
-    const { companyId } = context.params; // ✅ extract params here
+    const { companyId } = context.params;
 
-    const { userId } = auth(); // ✅ no await
+    const { userId } = auth(); // no await
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
@@ -26,11 +26,14 @@ export async function PATCH(
       return new NextResponse("Company not Found", { status: 404 });
     }
 
-    // Update the data
+    if (company.followers?.includes(userId)) {
+      return new NextResponse("User already follows this company", { status: 400 });
+    }
+
     const updatedCompany = await db.company.update({
       where: { id: companyId },
       data: {
-        followers: { push: userId }, // ✅ atomic push
+        followers: { push: userId },
       },
     });
 
