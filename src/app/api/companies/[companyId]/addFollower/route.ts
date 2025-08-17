@@ -8,10 +8,10 @@ interface Params {
 
 export async function PATCH(
   req: Request,
-  context: { params: Params } // use context, not destructured in type
+  { params }: { params: Params } // Explicitly define the type for params
 ) {
   try {
-    const { companyId } = context.params;
+    const { companyId } = params;
 
     // Validate MongoDB ObjectId
     const validObjectIdRegex = /^[0-9a-fA-F]{24}$/;
