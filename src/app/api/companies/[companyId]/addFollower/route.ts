@@ -1,9 +1,9 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server"; // Import NextRequest
 
 export async function PATCH(
-  req: Request,
+  req: NextRequest, // Correctly type the request
   context: { params: { companyId: string } }
 ) {
   try {
