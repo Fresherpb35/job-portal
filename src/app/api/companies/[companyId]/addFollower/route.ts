@@ -1,13 +1,18 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server"; // Import Next.js types
 
-export async function PATCH(
-  req: Request,
-  { params }: { params: { companyId: string } }
-) {
+// Define the params interface explicitly
+interface RouteParams {
+  params: {
+    companyId: string;
+  };
+}
+
+export async function PATCH(req: NextRequest, { params }: RouteParams) {
   try {
-    const { companyId } = params; // Correct: No await needed for params
+    const { companyId } = params; // Correct: Direct destructuring, no await
     const { userId } = auth();
 
     if (!userId) {
@@ -40,7 +45,7 @@ export async function PATCH(
 
     // Update the followers
     const updatedCompany = await db.company.update({
-      where: { id: companyId }, // Correct: Only companyId in where clause
+      where: { id: companyId },
       data: {
         followers: {
           push: userId, // Prisma syntax for appending to array
