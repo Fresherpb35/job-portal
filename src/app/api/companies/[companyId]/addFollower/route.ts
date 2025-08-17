@@ -1,40 +1,42 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
-import { NextResponse, NextRequest } from "next/server"; // Import NextRequest
+import { NextResponse } from "next/server";
 
 export async function PATCH(
-  req: NextRequest, // Correctly type the request
-  context: { params: { companyId: string } }
+  req: Request,
+  context: { params: { companyId: string } } // ✅ keep full context
 ) {
   try {
-    const { companyId } = context.params;
+    const { companyId } = context.params; // ✅ extract params here
 
-    // Clerk auth
-    const { userId } = auth();
+    const { userId } = auth(); // ✅ no await
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    // Find company
-    const company = await db.company.findUnique({ where: { id: companyId } });
+    if (!companyId) {
+      return new NextResponse("ID is missing", { status: 400 });
+    }
+
+    const company = await db.company.findUnique({
+      where: { id: companyId },
+    });
+
     if (!company) {
-      return new NextResponse("Company not found", { status: 404 });
+      return new NextResponse("Company not Found", { status: 404 });
     }
 
-    // Prevent duplicate follows
-    if (company.followers?.includes(userId)) {
-      return new NextResponse("User already follows this company", { status: 400 });
-    }
-
-    // Update followers (atomic push)
+    // Update the data
     const updatedCompany = await db.company.update({
       where: { id: companyId },
-      data: { followers: { push: userId } },
+      data: {
+        followers: { push: userId }, // ✅ atomic push
+      },
     });
 
     return NextResponse.json(updatedCompany);
   } catch (error) {
-    console.error("[ADD_FOLLOWER_PATCH]", error);
+    console.error("[company_PATCH]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
