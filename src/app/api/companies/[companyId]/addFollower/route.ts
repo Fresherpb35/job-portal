@@ -4,18 +4,24 @@ import { NextResponse } from "next/server";
 
 export async function PATCH(
   req: Request,
-  context: { params: { companyId: string } }
+  { params }: { params: { companyId: string } }
 ) {
   try {
-    const { companyId } = context.params;
+    const { companyId } = params; // Correct: No await needed for params
+    const { userId } = auth();
 
-    const { userId } = auth(); // no await
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
     if (!companyId) {
-      return new NextResponse("ID is missing", { status: 400 });
+      return new NextResponse("Company ID is missing", { status: 400 });
+    }
+
+    // Validate MongoDB ObjectId
+    const validObjectIdRegex = /^[0-9a-fA-F]{24}$/;
+    if (!validObjectIdRegex.test(companyId)) {
+      return new NextResponse("Invalid company ID", { status: 400 });
     }
 
     const company = await db.company.findUnique({
@@ -23,23 +29,28 @@ export async function PATCH(
     });
 
     if (!company) {
-      return new NextResponse("Company not Found", { status: 404 });
+      return new NextResponse("Company not found", { status: 404 });
     }
 
-    if (company.followers?.includes(userId)) {
+    // Check for duplicate followers
+    const followers = company.followers || [];
+    if (followers.includes(userId)) {
       return new NextResponse("User already follows this company", { status: 400 });
     }
 
+    // Update the followers
     const updatedCompany = await db.company.update({
-      where: { id: companyId },
+      where: { id: companyId }, // Correct: Only companyId in where clause
       data: {
-        followers: { push: userId },
+        followers: {
+          push: userId, // Prisma syntax for appending to array
+        },
       },
     });
 
     return NextResponse.json(updatedCompany);
   } catch (error) {
-    console.error("[company_PATCH]", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    console.error(`[COMPANY_PATCH] Error for companyId: ${params.companyId}`, error);
+    return new NextResponse("Internal server error", { status: 500 });
   }
 }
