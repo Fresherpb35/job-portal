@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { NextResponse, NextRequest } from "next/server";
 
-export async function PATCH(req: NextRequest, { params }: { params: { companyId: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Record<string, string> }) {
   try {
     const { companyId } = params;
     const { userId } = auth();
@@ -40,7 +40,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { companyId:
       where: { id: companyId },
       data: {
         followers: {
-          push: userId, // Prisma syntax for appending to array
+          push: userId,
         },
       },
     });
